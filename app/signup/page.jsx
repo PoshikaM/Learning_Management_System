@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Navbar from '../../components/layout/navbar';
 import InputField from '../../components/global/input-field';
 import Button from '../../components/global/button';
+import { getSession, signIn } from 'next-auth/react';
 
 const SignupPage = () => {
   const [form, setForm] = useState({ 
@@ -53,10 +54,29 @@ const SignupPage = () => {
 
       setSuccess('Registration successful! Redirecting to login...');
       
-      // Redirect to login page after 2 seconds
-      setTimeout(() => {
-        router.push('/signin');
-      }, 2000);
+      // ✅ WAIT for DB to sync (optional, helps avoid race condition)
+      await new Promise((r) => setTimeout(r, 500));
+
+      // ✅ AUTO-LOGIN user after successful registration
+      const signInRes = await signIn('credentials', {
+        redirect: false,
+        email: form.email,
+        password: form.password,
+      });
+
+      // ✅ GET SESSION and REDIRECT based on role
+      if (signInRes?.ok) {
+        const session = await getSession();
+        const role = session?.user?.role;
+
+        if (role === 'admin') {
+          router.push('/admin_dashboard');
+        } else {
+          router.push('/student-dashboard');
+        }
+      } else {
+        setError('User registered, but auto-login failed.');
+      }
 
     } catch (err) {
       setError('An unexpected error occurred.');
