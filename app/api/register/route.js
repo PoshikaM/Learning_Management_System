@@ -85,9 +85,25 @@ export async function POST(request) {
       timestamp: new Date().toISOString()
     });
 
+    const dashboard = role === 'admin' ? 'admin_dashboard' : 'student-dashboard';
+    const redirectMessage = `User registered successfully. Redirecting to /${dashboard}`;
+
+    // return NextResponse.json(
+    //   { 
+    //     message: 'User registered successfully',
+    //     user: {
+    //       id: newUser._id.toString(),
+    //       email: newUser.email,
+    //       name: newUser.name,
+    //       role: newUser.role
+    //     }
+    //   },
+    //   { status: 201 }
+    // );
+
     return NextResponse.json(
       { 
-        message: 'User registered successfully',
+        message: redirectMessage,
         user: {
           id: newUser._id.toString(),
           email: newUser.email,
