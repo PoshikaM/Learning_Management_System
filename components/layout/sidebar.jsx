@@ -1,6 +1,21 @@
+"use client";
 import React from 'react';
+import { signOut } from 'next-auth/react';
+import toast from 'react-hot-toast';
 
 const Sidebar = ({ role, children }) => {
+  const handleLogout = async () => {
+    try {
+      const loadingToast = toast.loading('Logging out...', {
+        duration: Infinity,
+      });
+      await signOut({ callbackUrl: '/signin' });
+    } catch (error) {
+      toast.error('Logout failed. Please try again.');
+      console.error('Logout error:', error);
+    }
+  };
+
   let links;
   if (role === 'admin') {
     links = (
@@ -8,7 +23,12 @@ const Sidebar = ({ role, children }) => {
         <a href="/admin_dashboard" className="text-blue-600 hover:text-blue-800">Admin Dashboard</a>
         <a href="/edit_lesson" className="text-blue-600 hover:text-blue-800">Edit Lessons</a>
         <a href="/manage_students" className="text-blue-600 hover:text-blue-800">Manage Users</a>
-        <a href="/logout" className="text-blue-600 hover:text-blue-800">Logout</a>
+        <button
+          onClick={handleLogout}
+          className="text-blue-600 hover:text-blue-800 text-left"
+        >
+          Logout
+        </button>
       </>
     );
   } else if (role === 'student') {
@@ -18,7 +38,12 @@ const Sidebar = ({ role, children }) => {
         <a href="/courses" className="text-green-600 hover:text-green-800">My Courses</a>
         <a href="/grades" className="text-green-600 hover:text-green-800">Grades</a>
         <a href="/profile" className="text-green-600 hover:text-green-800">Profile</a>
-        <a href="/logout" className="text-green-600 hover:text-green-800">Logout</a>
+        <button
+          onClick={handleLogout}
+          className="text-green-600 hover:text-green-800 text-left"
+        >
+          Logout
+        </button>
       </>
     );
   } else {
