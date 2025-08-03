@@ -1,32 +1,34 @@
-"use client"
+"use client";
 import React, { useState } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 import Navbar from '../layout/navbar';
 import InputField from '../global/input-field';
 import Button from '../global/button';
 
 const LoginPage = () => {
   const [form, setForm] = useState({ email: '', password: '' });
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    setError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     
     if (!form.email || !form.password) {
-      setError('Email and password are required.');
+      toast.error('Email and password are required.');
       return;
     }
     
     setIsLoading(true);
+    
+    const loadingToast = toast.loading('Signing you in...', {
+      duration: Infinity,
+    });
     
     try {
       const res = await signIn("credentials", { 
@@ -36,13 +38,15 @@ const LoginPage = () => {
       });
       
       if (res?.error) {
-        setError("Invalid credentials");
+        toast.dismiss(loadingToast);
+        toast.error("Invalid credentials. Please check your email and password.");
         setIsLoading(false);
         return;
       }
       
       if (res?.ok) {
-        // Wait for session to update
+        toast.dismiss(loadingToast);
+        toast.success('Login successful! Redirecting...');
         setTimeout(async () => {
           const sessionRes = await fetch('/api/auth/session');
           const session = await sessionRes.json();
@@ -53,12 +57,13 @@ const LoginPage = () => {
           } else if (role === 'student') {
             router.push('/student_dashboard');
           } else {
-           console.log(session);
+            console.log(session);
           }
         }, 100);
       }
     } catch (err) {
-      setError("An unexpected error occurred.");
+      toast.dismiss(loadingToast);
+      toast.error("An unexpected error occurred. Please try again.");
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -71,12 +76,6 @@ const LoginPage = () => {
       <div className="max-w-md mx-auto mt-16 bg-white">
         <form onSubmit={handleSubmit} className="bg-white p-8 rounded shadow-md">
           <h2 className="text-2xl text-black font-bold mb-6 text-center">Sign In</h2>
-          
-          {error && (
-            <div className="mb-4 text-red-600 text-center text-sm" role="alert">
-              {error}
-            </div>
-          )}
           
           <InputField
             label="Email"
